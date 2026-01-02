@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Download, Search, BarChart3, TrendingUp, Users, Award } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Download, Search, BarChart3, TrendingUp, Users, Award, ArrowUpDown, Filter } from 'lucide-react';
 import { StudentRecord } from '../types';
 
 interface ResultsTableProps {
@@ -8,18 +8,58 @@ interface ResultsTableProps {
 }
 
 const ResultsTable: React.FC<ResultsTableProps> = ({ records }) => {
-  const exportToCSV = () => {
-    let csvContent = "data:text/csv;charset=utf-8,ID,Name,Score,Total,Status\n";
-    records.forEach(r => {
-      const status = r.results.some(res => res.isAnomalous) ? "Requires Review" : "Completed";
-      csvContent += `${r.studentId},${r.studentName},${r.score},${r.totalQuestions},${status}\n`;
+  const [sortConfig, setSortConfig] = useState<{ key: 'studentId' | 'studentName' | 'score', direction: 'asc' | 'desc' }>({
+    key: 'studentId',
+    direction: 'asc'
+  });
+
+  const sortedRecords = useMemo(() => {
+    const sortableItems = [...records];
+    sortableItems.sort((a, b) => {
+      let aVal = a[sortConfig.key];
+      let bVal = b[sortConfig.key];
+
+      // พยายามแปลงเป็นตัวเลขถ้าเป็น ID เพื่อให้เรียง 1, 2, 10 ได้ถูกต้อง
+      if (sortConfig.key === 'studentId') {
+        const aNum = parseInt(aVal.replace(/\D/g, ''));
+        const bNum = parseInt(bVal.replace(/\D/g, ''));
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+          return sortConfig.direction === 'asc' ? aNum - bNum : bNum - aNum;
+        }
+      }
+
+      if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
     });
-    const encodedUri = encodeURI(csvContent);
+    return sortableItems;
+  }, [records, sortConfig]);
+
+  const requestSort = (key: 'studentId' | 'studentName' | 'score') => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const exportToCSV = () => {
+    // ใช้ \uFEFF เพื่อให้ Excel เปิดภาษาไทยได้ถูกต้อง (BOM)
+    let csvContent = "\uFEFFเลขที่/รหัส,ชื่อ-นามสกุล,คะแนน,เต็ม,หมายเหตุ\n";
+    sortedRecords.forEach(r => {
+      const isAnomalous = r.results.some(res => res.isAnomalous);
+      const note = isAnomalous ? "ต้องตรวจสอบใหม่" : "ปกติ";
+      csvContent += `"${r.studentId}","${r.studentName}",${r.score},${r.totalQuestions},"${note}"\n`;
+    });
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "school_exam_results.csv");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `คะแนน_วิชา_${new Date().toLocaleDateString()}.csv`);
     document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   };
 
   if (records.length === 0) {
@@ -66,15 +106,15 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ records }) => {
         <div className="flex items-center gap-4">
           <div className="bg-indigo-500 p-3 rounded-2xl text-white"><BarChart3 size={24} /></div>
           <div>
-            <h4 className="text-white font-black text-xl">ข้อมูลพร้อมส่งออก</h4>
-            <p className="text-indigo-300 text-sm font-medium">ตรวจสอบความถูกต้องก่อนบันทึกเข้าระบบโรงเรียน</p>
+            <h4 className="text-white font-black text-xl">สรุปผลการจัดเรียง</h4>
+            <p className="text-indigo-300 text-sm font-medium">คะแนนเรียงตามเลขที่ พร้อมนำไปลงชีตคะแนน</p>
           </div>
         </div>
         <button 
           onClick={exportToCSV}
           className="bg-green-500 hover:bg-green-400 text-slate-900 px-10 py-4 rounded-2xl flex items-center gap-3 font-black shadow-lg shadow-green-900/20 transition-all w-full sm:w-auto active:scale-95"
         >
-          <Download size={24} /> สั่ง Export คะแนน (CSV)
+          <Download size={24} /> ส่งออกไฟล์ Excel (CSV)
         </button>
       </div>
 
@@ -82,37 +122,63 @@ const ResultsTable: React.FC<ResultsTableProps> = ({ records }) => {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-100">
-              <th className="px-8 py-6 text-sm font-black text-slate-500 uppercase tracking-widest">รหัสนักเรียน</th>
-              <th className="px-8 py-6 text-sm font-black text-slate-500 uppercase tracking-widest">ชื่อ-นามสกุล</th>
-              <th className="px-8 py-6 text-sm font-black text-slate-500 uppercase tracking-widest">คะแนนสุทธิ</th>
-              <th className="px-8 py-6 text-sm font-black text-slate-500 uppercase tracking-widest">ความก้าวหน้า</th>
-              <th className="px-8 py-6 text-sm font-black text-slate-500 uppercase tracking-widest text-right">จัดการ</th>
+              <th 
+                className="px-8 py-6 text-sm font-black text-slate-500 uppercase tracking-widest cursor-pointer hover:text-indigo-600 transition-colors"
+                onClick={() => requestSort('studentId')}
+              >
+                <div className="flex items-center gap-2">
+                  เลขที่/รหัส <ArrowUpDown size={14} />
+                </div>
+              </th>
+              <th 
+                className="px-8 py-6 text-sm font-black text-slate-500 uppercase tracking-widest cursor-pointer hover:text-indigo-600 transition-colors"
+                onClick={() => requestSort('studentName')}
+              >
+                <div className="flex items-center gap-2">
+                  ชื่อ-นามสกุล <ArrowUpDown size={14} />
+                </div>
+              </th>
+              <th 
+                className="px-8 py-6 text-sm font-black text-slate-500 uppercase tracking-widest cursor-pointer hover:text-indigo-600 transition-colors"
+                onClick={() => requestSort('score')}
+              >
+                <div className="flex items-center gap-2">
+                  คะแนนสุทธิ <ArrowUpDown size={14} />
+                </div>
+              </th>
+              <th className="px-8 py-6 text-sm font-black text-slate-500 uppercase tracking-widest">ระดับคะแนน</th>
+              <th className="px-8 py-6 text-sm font-black text-slate-500 uppercase tracking-widest text-right">สถานะ</th>
             </tr>
           </thead>
           <tbody>
-            {records.map((record) => (
-              <tr key={record.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
-                <td className="px-8 py-6 text-slate-500 font-bold">{record.studentId}</td>
-                <td className="px-8 py-6 text-slate-800 font-black text-lg">{record.studentName}</td>
-                <td className="px-8 py-6">
-                  <span className="text-2xl font-black text-indigo-600">{record.score}</span>
-                  <span className="text-slate-400 font-bold text-sm"> / {record.totalQuestions}</span>
-                </td>
-                <td className="px-8 py-6">
-                  <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden max-w-[120px]">
-                    <div 
-                      className={`h-full transition-all duration-1000 ${record.score / record.totalQuestions > 0.5 ? 'bg-green-500' : 'bg-red-400'}`} 
-                      style={{ width: `${(record.score / record.totalQuestions) * 100}%` }}
-                    />
-                  </div>
-                </td>
-                <td className="px-8 py-6 text-right">
-                  <button className="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center mx-auto sm:ml-auto">
-                    <Search size={18} />
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {sortedRecords.map((record) => {
+              const hasAnomaly = record.results.some(res => res.isAnomalous);
+              return (
+                <tr key={record.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors">
+                  <td className="px-8 py-6 text-slate-500 font-bold">{record.studentId}</td>
+                  <td className="px-8 py-6 text-slate-800 font-black text-lg">{record.studentName}</td>
+                  <td className="px-8 py-6">
+                    <span className="text-2xl font-black text-indigo-600">{record.score}</span>
+                    <span className="text-slate-400 font-bold text-sm"> / {record.totalQuestions}</span>
+                  </td>
+                  <td className="px-8 py-6">
+                    <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden max-w-[120px]">
+                      <div 
+                        className={`h-full transition-all duration-1000 ${record.score / record.totalQuestions >= 0.5 ? 'bg-green-500' : 'bg-red-400'}`} 
+                        style={{ width: `${(record.score / record.totalQuestions) * 100}%` }}
+                      />
+                    </div>
+                  </td>
+                  <td className="px-8 py-6 text-right">
+                    {hasAnomaly ? (
+                      <span className="px-3 py-1 bg-orange-100 text-orange-600 text-xs font-black rounded-full">ต้องตรวจสอบ</span>
+                    ) : (
+                      <span className="px-3 py-1 bg-green-100 text-green-600 text-xs font-black rounded-full">เรียบร้อย</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
