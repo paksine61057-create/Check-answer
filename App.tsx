@@ -57,7 +57,7 @@ const App: React.FC = () => {
       studentRecords: [],
       createdAt: Date.now()
     };
-    setExams([...exams, newExam]);
+    setExams(prev => [...prev, newExam]);
     setActiveExamId(newExam.id);
     setCurrentStep(AppStep.SETUP_MASTER);
   };
@@ -73,8 +73,8 @@ const App: React.FC = () => {
   };
 
   const handleDeleteExam = (id: string) => {
-    if (confirm("ยืนยันการลบวิชานี้และข้อมูลคะแนนทั้งหมด?")) {
-      setExams(exams.filter(e => e.id !== id));
+    if (window.confirm("ยืนยันการลบวิชานี้และข้อมูลคะแนนทั้งหมด?")) {
+      setExams(prev => prev.filter(e => e.id !== id));
       if (activeExamId === id) {
         setActiveExamId(null);
         setCurrentStep(AppStep.SELECT_EXAM);
@@ -83,12 +83,12 @@ const App: React.FC = () => {
   };
 
   const handleMasterUpload = (config: MasterConfig) => {
-    setExams(exams.map(e => e.id === activeExamId ? { ...e, masterConfig: config } : e));
+    setExams(prev => prev.map(e => e.id === activeExamId ? { ...e, masterConfig: config } : e));
     setCurrentStep(AppStep.PROCESS_STUDENTS);
   };
 
   const handleProcessComplete = (records: StudentRecord[]) => {
-    setExams(exams.map(e => e.id === activeExamId ? { ...e, studentRecords: [...e.studentRecords, ...records] } : e));
+    setExams(prev => prev.map(e => e.id === activeExamId ? { ...e, studentRecords: [...e.studentRecords, ...records] } : e));
   };
 
   const riskyCount = useMemo(() => 
