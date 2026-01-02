@@ -22,6 +22,15 @@ const StudentBatchProcessor: React.FC<StudentBatchProcessorProps> = ({ masterCon
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  const normalizeAnswer = (ans: string): string => {
+    const map: Record<string, string> = {
+      'A': 'ก', 'B': 'ข', 'C': 'ค', 'D': 'ง',
+      'a': 'ก', 'b': 'ข', 'c': 'ค', 'd': 'ง'
+    };
+    const trimmed = ans.trim();
+    return map[trimmed] || trimmed;
+  };
+
   const displayRecords = useMemo(() => {
     let filtered = [...records];
     if (filterAnomalies) {
@@ -72,8 +81,9 @@ const StudentBatchProcessor: React.FC<StudentBatchProcessorProps> = ({ masterCon
             1. อ่าน "ชื่อ-นามสกุล" ที่เขียนด้วยลายมือ
             2. อ่าน "เลขที่" หรือ "รหัสประจำตัว" ที่เขียนด้วยลายมือให้แม่นยำที่สุด
             3. ตรวจข้อสอบข้อที่: ${questionList} โดยเทียบกับเฉลยที่ครูให้มา
-            4. หากลายมือชื่อหรือเลขที่อ่านยากมาก ให้ตอบว่า "อ่านไม่ออก" และระบุ isAnomalous: true
-            5. ตรวจสอบรอยลบ/แก้ไข หากมีการตอบ 2 ช่องในข้อเดียว ให้มาร์ค isAnomalous: true พร้อมระบุเหตุผล "กาซ้ำ"`,
+            4. **สำคัญมาก**: ให้ตอบคำตอบนักเรียนเป็นอักษรไทย 'ก', 'ข', 'ค', หรือ 'ง' เท่านั้น ห้ามตอบเป็น A, B, C, D
+            5. หากลายมือชื่อหรือเลขที่อ่านยากมาก ให้ตอบว่า "อ่านไม่ออก" และระบุ isAnomalous: true
+            6. ตรวจสอบรอยลบ/แก้ไข หากมีการตอบ 2 ช่องในข้อเดียว ให้มาร์ค isAnomalous: true พร้อมระบุเหตุผล "กาซ้ำ"`,
           },
         ],
       },
@@ -90,7 +100,7 @@ const StudentBatchProcessor: React.FC<StudentBatchProcessorProps> = ({ masterCon
                 type: Type.OBJECT,
                 properties: {
                   questionNumber: { type: Type.INTEGER },
-                  studentAnswer: { type: Type.STRING },
+                  studentAnswer: { type: Type.STRING, description: "ต้องเป็น ก, ข, ค หรือ ง เท่านั้น" },
                   isAnomalous: { type: Type.BOOLEAN },
                   anomalyReason: { type: Type.STRING },
                 },
@@ -107,11 +117,19 @@ const StudentBatchProcessor: React.FC<StudentBatchProcessorProps> = ({ masterCon
     let score = 0;
     const processedResults = (resultData.results || []).map((res: any) => {
       const qNum = res.questionNumber;
-      const rawStudentAns = (res.studentAnswer || "").trim();
-      const correctAnswer = (masterConfig.correctAnswers[qNum] || "").trim();
+      // Normalize both student answer and master answer just in case
+      const rawStudentAns = normalizeAnswer(res.studentAnswer || "");
+      const correctAnswer = normalizeAnswer(masterConfig.correctAnswers[qNum] || "");
+      
       const isCorrect = !res.isAnomalous && rawStudentAns !== "" && rawStudentAns === correctAnswer;
       if (isCorrect) score++;
-      return { ...res, studentAnswer: rawStudentAns, correctAnswer, isCorrect };
+      
+      return { 
+        ...res, 
+        studentAnswer: rawStudentAns, 
+        correctAnswer, 
+        isCorrect 
+      };
     });
 
     return {
@@ -132,7 +150,6 @@ const StudentBatchProcessor: React.FC<StudentBatchProcessorProps> = ({ masterCon
 
     setIsUploading(true);
     setBatchProgress({ current: 0, total: files.length });
-    // Fix: Cast Array.from(files) to File[] to ensure the loop elements are correctly typed as File (Blob)
     const filesArray = Array.from(files) as File[];
     const newRecords: StudentRecord[] = [];
 
@@ -143,7 +160,6 @@ const StudentBatchProcessor: React.FC<StudentBatchProcessorProps> = ({ masterCon
         const base64Data = await new Promise<string>((resolve) => {
           const reader = new FileReader();
           reader.onload = (ev) => resolve(ev.target?.result as string);
-          // file is now correctly identified as a Blob by TypeScript
           reader.readAsDataURL(file);
         });
         const compressed = await compressImage(base64Data);
@@ -152,7 +168,6 @@ const StudentBatchProcessor: React.FC<StudentBatchProcessorProps> = ({ masterCon
         newRecords.push(record);
       } catch (error) {
         console.error("Batch processing error at index", i, error);
-        // ข้ามไฟล์ที่เสีย
       }
     }
     

@@ -19,6 +19,15 @@ const MasterKeyUploader: React.FC<MasterKeyUploaderProps> = ({ onComplete }) => 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  const normalizeAnswer = (ans: string): string => {
+    const map: Record<string, string> = {
+      'A': 'ก', 'B': 'ข', 'C': 'ค', 'D': 'ง',
+      'a': 'ก', 'b': 'ข', 'c': 'ค', 'd': 'ง'
+    };
+    const trimmed = ans.trim();
+    return map[trimmed] || trimmed;
+  };
+
   const compressImage = (base64Str: string): Promise<string> => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -121,7 +130,7 @@ const MasterKeyUploader: React.FC<MasterKeyUploaderProps> = ({ onComplete }) => 
               },
             },
             {
-              text: "นี่คือภาพ 'เฉลยต้นแบบ' โปรดวิเคราะห์: 1. หาเลขข้อทั้งหมด 2. ระบุว่าแต่ละข้อมีการกากบาทที่ช่องใด (ก, ข, ค, หรือ ง เท่านั้น) 3. ตรวจสอบให้แน่ใจว่าอ่านครบทุกข้อที่ปรากฏในภาพ",
+              text: "นี่คือภาพ 'เฉลยต้นแบบ' ของครูไทย โปรดวิเคราะห์: 1. หาเลขข้อทั้งหมด 2. ระบุว่าแต่ละข้อมีการกากบาทที่ช่องใด โดยห้ามตอบเป็น A, B, C, D ให้ตอบเป็นอักษรไทย 'ก', 'ข', 'ค', หรือ 'ง' เท่านั้น",
             },
           ],
         },
@@ -157,7 +166,8 @@ const MasterKeyUploader: React.FC<MasterKeyUploaderProps> = ({ onComplete }) => 
       }
 
       result.answers.forEach((item: any) => {
-        correctAnswers[item.questionNumber] = (item.answer || "").trim();
+        // Normalize answer to Thai characters just in case AI ignores the prompt
+        correctAnswers[item.questionNumber] = normalizeAnswer(item.answer || "");
       });
 
       onComplete({
