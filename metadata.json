@@ -1,0 +1,7 @@
+{
+  "name": "Thai School Exam Grader AI",
+  "description": "ระบบตรวจข้อสอบอัจฉริยะสำหรับครูไทย ตรวจผ่านเว็บแอปพลิเคชัน รองรับการถ่ายภาพจากมือถือ ปรับมุมอัตโนมัติ และสรุปผลเข้า Excel",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
