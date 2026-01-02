@@ -96,26 +96,26 @@ const App: React.FC = () => {
   , [activeExam]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-slate-100">
       <Header onShowArch={() => setShowArch(!showArch)} />
       
-      {/* Teacher Dashboard Bar */}
-      <div className="bg-white border-b border-slate-200 sticky top-[72px] z-40 shadow-sm">
+      {/* Teacher Dashboard Bar - Increased Contrast */}
+      <div className="bg-white border-b-2 border-slate-300 sticky top-[72px] z-40 shadow-md">
         <div className="container mx-auto px-4 py-3 max-w-6xl flex flex-wrap gap-2 md:gap-4 items-center">
           <button 
             onClick={() => setCurrentStep(AppStep.SELECT_EXAM)}
-            className="flex items-center gap-2 px-4 py-2 text-slate-600 rounded-lg hover:bg-slate-100 transition-colors font-bold text-sm border border-slate-200"
+            className="flex items-center gap-2 px-4 py-2 text-slate-900 rounded-lg hover:bg-slate-200 transition-colors font-black text-sm border-2 border-slate-200"
           >
             <ChevronLeft size={18} /> สลับวิชา
           </button>
           
-          <div className="h-6 w-[1px] bg-slate-200 mx-2 hidden md:block"></div>
+          <div className="h-8 w-[2px] bg-slate-200 mx-2 hidden md:block"></div>
 
           {activeExam && currentStep !== AppStep.SELECT_EXAM && (
             <>
-              <div className="flex flex-col mr-4">
-                <span className="text-[10px] font-black text-indigo-500 uppercase">กำลังตรวจวิชา</span>
-                <span className="text-sm font-bold text-slate-800">{activeExam.subjectName} ({activeExam.gradeLevel})</span>
+              <div className="flex flex-col mr-4 bg-indigo-50 px-3 py-1 rounded-xl border border-indigo-100">
+                <span className="text-[10px] font-black text-indigo-600 uppercase">วิชาปัจจุบัน</span>
+                <span className="text-sm font-black text-slate-900">{activeExam.subjectName} ({activeExam.gradeLevel})</span>
               </div>
 
               <button 
@@ -123,7 +123,7 @@ const App: React.FC = () => {
                   setCurrentStep(AppStep.PROCESS_STUDENTS);
                   setFilterAnomalies(false);
                 }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-bold text-sm ${currentStep === AppStep.PROCESS_STUDENTS && !filterAnomalies ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-black text-sm ${currentStep === AppStep.PROCESS_STUDENTS && !filterAnomalies ? 'bg-indigo-600 text-white shadow-lg ring-2 ring-indigo-300' : 'text-slate-700 hover:bg-slate-100 border border-slate-200'}`}
               >
                 <Camera size={18} /> สแกนเพิ่ม
               </button>
@@ -132,18 +132,18 @@ const App: React.FC = () => {
                   setCurrentStep(AppStep.PROCESS_STUDENTS);
                   setFilterAnomalies(true);
                 }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-bold text-sm relative ${filterAnomalies ? 'bg-orange-500 text-white shadow-md' : 'text-slate-600 hover:bg-orange-50 text-orange-600'}`}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-black text-sm relative ${filterAnomalies ? 'bg-orange-600 text-white shadow-lg ring-2 ring-orange-300' : 'text-orange-700 hover:bg-orange-50 border border-orange-200'}`}
               >
                 <AlertTriangle size={18} /> ตรวจแผ่นเสี่ยง
                 {riskyCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] text-white ring-2 ring-white">
+                  <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-[10px] text-white ring-2 ring-white shadow-sm font-black">
                     {riskyCount}
                   </span>
                 )}
               </button>
               <button 
                 onClick={() => setCurrentStep(AppStep.RESULTS)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-bold text-sm ${currentStep === AppStep.RESULTS ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100'}`}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-black text-sm ${currentStep === AppStep.RESULTS ? 'bg-indigo-600 text-white shadow-lg ring-2 ring-indigo-300' : 'text-slate-700 hover:bg-slate-100 border border-slate-200'}`}
               >
                 <BarChart3 size={18} /> สรุปผล
               </button>
@@ -155,7 +155,7 @@ const App: React.FC = () => {
       <main className="flex-1 container mx-auto px-4 py-8 max-w-6xl">
         {currentStep !== AppStep.SELECT_EXAM && <StepProgressBar currentStep={currentStep} />}
 
-        <div className="mt-8 bg-white rounded-3xl shadow-xl overflow-hidden min-h-[500px] border border-slate-100">
+        <div className="mt-8 bg-white rounded-[40px] shadow-2xl overflow-hidden min-h-[600px] border border-slate-200">
           {currentStep === AppStep.SELECT_EXAM && (
             <ExamManager 
               exams={exams} 
@@ -166,34 +166,37 @@ const App: React.FC = () => {
           )}
 
           {currentStep === AppStep.SETUP_MASTER && (
-            <div className="p-8">
-              <div className="text-center mb-8">
-                <div className="bg-indigo-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 text-indigo-600">
-                  <PlusCircle size={32} />
+            <div className="p-8 md:p-12">
+              <div className="text-center mb-10">
+                <div className="bg-indigo-100 w-20 h-20 rounded-[28px] flex items-center justify-center mx-auto mb-6 text-indigo-700 shadow-inner">
+                  <PlusCircle size={40} />
                 </div>
-                <h2 className="text-2xl font-black text-slate-800 tracking-tight">ขั้นตอนที่ 1: ตั้งค่าเฉลย [{activeExam?.subjectName}]</h2>
-                <p className="text-slate-500 mt-2 font-medium">สแกนเฉลยของครูเพื่อให้ AI เรียนรู้ตำแหน่งช่องคำตอบ</p>
+                <h2 className="text-3xl font-black text-slate-900 tracking-tight">ขั้นตอนที่ 1: ตั้งค่าเฉลย</h2>
+                <p className="text-slate-600 mt-2 font-bold text-lg">วิชา: {activeExam?.subjectName}</p>
+                <p className="text-slate-400 mt-1 font-medium">สแกนเฉลยของครูเพื่อให้ AI เรียนรู้ตำแหน่งช่องคำตอบ</p>
               </div>
               <MasterKeyUploader onComplete={handleMasterUpload} />
             </div>
           )}
 
           {currentStep === AppStep.PROCESS_STUDENTS && activeExam && (
-            <div className="p-8">
-              <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-4">
+            <div className="p-8 md:p-12">
+              <div className="flex flex-col md:flex-row justify-between items-start mb-10 gap-6">
                 <div>
-                  <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-3">
-                    {filterAnomalies ? <AlertTriangle className="text-orange-500" /> : <Camera className="text-indigo-600" />}
-                    {filterAnomalies ? 'แผ่นที่มีความผิดปกติ' : 'ตรวจกระดาษคำตอบ'}
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-4">
+                    {filterAnomalies ? <AlertTriangle className="text-orange-600" /> : <Camera className="text-indigo-700" />}
+                    {filterAnomalies ? 'ตรวจสอบแผ่นที่มีปัญหา' : 'ตรวจกระดาษคำตอบนักเรียน'}
                   </h2>
-                  <p className="text-slate-500 mt-1 font-medium">{activeExam.subjectName} - {activeExam.gradeLevel}</p>
+                  <p className="text-slate-700 mt-2 font-black bg-slate-100 px-4 py-1 rounded-full inline-block">
+                    {activeExam.subjectName} • {activeExam.gradeLevel}
+                  </p>
                 </div>
                 {!filterAnomalies && (
                   <button 
                     onClick={() => setCurrentStep(AppStep.RESULTS)}
-                    className="bg-slate-900 hover:bg-black text-white px-8 py-3 rounded-xl flex items-center gap-3 transition-all font-bold shadow-lg"
+                    className="bg-slate-900 hover:bg-black text-white px-10 py-4 rounded-2xl flex items-center gap-4 transition-all font-black shadow-xl hover:scale-105 active:scale-95"
                   >
-                    ดูสรุปผลคะแนน <ArrowRight size={20} />
+                    ดูสรุปผลคะแนน <ArrowRight size={24} />
                   </button>
                 )}
               </div>
@@ -207,13 +210,13 @@ const App: React.FC = () => {
           )}
 
           {currentStep === AppStep.RESULTS && activeExam && (
-            <div className="p-8">
-              <div className="flex justify-between items-start mb-8">
+            <div className="p-8 md:p-12">
+              <div className="flex justify-between items-start mb-10">
                 <div>
-                  <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-3">
-                    <BarChart3 className="text-indigo-600" /> สรุปผลคะแนน [{activeExam.subjectName}]
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-4">
+                    <BarChart3 className="text-indigo-700" size={32} /> สรุปผลคะแนน
                   </h2>
-                  <p className="text-slate-500 mt-1 font-medium">วิเคราะห์สถิติและส่งออกคะแนนเข้าสู่ระบบบริหารจัดการของโรงเรียน</p>
+                  <p className="text-slate-600 mt-2 font-bold text-lg">วิชา: {activeExam.subjectName} ({activeExam.gradeLevel})</p>
                 </div>
               </div>
               <ResultsTable records={activeExam.studentRecords} />
@@ -222,15 +225,16 @@ const App: React.FC = () => {
         </div>
 
         {showArch && (
-          <div className="mt-12">
+          <div className="mt-16">
             <SystemArchitectureInfo />
           </div>
         )}
       </main>
 
-      <footer className="bg-white py-8 border-t border-slate-200 text-center text-slate-400 text-sm font-medium">
-        <div className="container mx-auto max-w-6xl">
-          <p>© 2024 AI Exam Grader - สนับสนุนคุณครูไทยให้ทำงานได้รวดเร็วและแม่นยำ</p>
+      <footer className="bg-white py-12 border-t-2 border-slate-200 text-center">
+        <div className="container mx-auto max-w-6xl px-4">
+          <p className="text-slate-900 font-black text-lg mb-2">AI Exam Grader for Thai Schools</p>
+          <p className="text-slate-400 font-medium">© 2024 สนับสนุนคุณครูไทยให้ทำงานได้รวดเร็วและแม่นยำด้วยเทคโนโลยี AI</p>
         </div>
       </footer>
     </div>
